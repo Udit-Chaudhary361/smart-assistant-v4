@@ -69,7 +69,7 @@ class Database:
         return ""
 
     def add_note(self, note):
-        self.conn.execute(
+        self.cursor.execute(
             "INSERT INTO notes(note) VALUES (?)",
             (note,))
         self.conn.commit()

@@ -29,17 +29,25 @@ while True:
         choose = int(input("Choose - "))
         
         if choose == 1:
-            user = input("Enter Name : ")
-            db.set_name(user)
-            print("Name Updated Successfully!!")
+            user = input("Enter Name : ").strip()
+
+            if not user:
+                print("Name cannot be empty!")
+            else:
+                db.set_name(user)
+                print("Name Updated Successfully!!")
 
         elif choose ==2:
             print(f"Name - {db.get_name()}")
 
         elif choose == 3:
-            note = input("Enter Note : ")
-            db.add_note(note)
-            print("Note Added Successfully!!")
+            note = input("Enter Note : ").strip()
+
+            if not note:
+                print("Note cannot be empty!")
+            else:
+                db.add_note(note)
+                print("Note Added Successfully!!")
 
         elif choose ==4:
             print("Notes :")
@@ -52,18 +60,18 @@ while True:
                     print("Note Deleted Successfully!!")
                 else:
                     print("Note Id Not Found")
-                if db.delete_note(note_num):
-                    print("Note Deleted Successfully!!")
-                else:
-                    print("Note Id Not Found")
             except ValueError:
                 print("Enter Only Numeric Value")
 
         elif choose ==6:
             try:
-                task = input("Enter Task : ")
-                db.add_task(task)
-                print("Task Added Successfully!!")
+                task = input("Enter Task : ").strip()
+
+                if not task:
+                    print("Task cannot be empty!")
+                else:
+                    db.add_task(task)
+                    print("Task Added Successfully!!")
             except ValueError:
                 print("Enter Only Numeric Value")
 
