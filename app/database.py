@@ -1,0 +1,178 @@
+import sqlite3
+import os
+from logger import logger
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
+DATA_DIR = os.path.join(BASE_DIR, "data")
+
+os.makedirs(DATA_DIR, exist_ok=True)
+
+DB = os.path.join(DATA_DIR, "assistant.db")
+
+class Database:
+
+    def __init__(self):
+        self.conn = sqlite3.connect(DB)
+        self.cursor = self.conn.cursor()
+        self.create_tables()
+
+    def create_tables(self):
+
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS user(id INTEGER PRIMARY KEY,name TEXT)"
+        )
+
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS notes(id INTEGER PRIMARY KEY AUTOINCREMENT,note TEXT NOT NULL)"
+        )
+
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,task TEXT NOT NULL,completed INTEGER DEFAULT 0)"
+        )
+
+        self.conn.commit()
+        
+    def set_name(self, name):
+        self.cursor.execute(
+            "SELECT * FROM user WHERE id = 1"
+        )
+
+        row = self.cursor.fetchone()
+
+        if row:
+            self.cursor.execute(
+                "UPDATE user SET name = ? WHERE id = 1",
+                (name,)
+            )
+        else:
+            self.cursor.execute(
+                "INSERT INTO user (id, name) VALUES (1, ?)",
+                (name,)
+            )
+
+        self.conn.commit()
+        logger(f"Set Name - {name}")
+
+    def get_name(self):
+        self.cursor.execute(
+            "SELECT * FROM user"
+        )  
+        logger("Viewed Name")
+        return self.cursor.fetchone()[1]
+
+    def add_note(self, note):
+        self.conn.execute(
+            "INSERT INTO notes(note) VALUES (?)",
+            (note,))
+        self.conn.commit()
+        logger(f"Added Note - {note}")
+
+    def get_notes(self):
+        self.cursor.execute(
+            "SELECT * FROM notes"
+        )
+        output = ""
+        notes = self.cursor.fetchall()
+        for note in notes:
+
+            output+=f"{note[0]} - {note[1]}\n"
+        logger("Viewed Notes")
+        return output
+
+    def delete_note(self, note_id):
+        self.cursor.execute(
+            "SELECT COUNT(*) FROM notes"
+        )
+        num = self.cursor.fetchall()[0][0]
+        if note_id < 1 or note_id > num:
+            print("Invalid Note Number!")
+        else:
+            self.cursor.execute(
+                "DELETE FROM notes WHERE id = (?)",
+                (note_id,))
+            self.conn.commit()
+            logger(f"Deleted Note")
+
+    def add_task(self, task):
+        self.conn.execute(
+            "INSERT INTO tasks (task) VALUES (?)",
+            (task,))
+        self.conn.commit()
+        logger(f"Added Task - {task}")
+        
+    def get_tasks(self):
+        self.cursor.execute(
+            "SELECT * FROM tasks"
+        )
+        
+        tasks = self.cursor.fetchall()
+        output = ""
+        for task in tasks:
+            if task[2]:
+                tick = "[✓]"
+            else:
+                tick = "[ ]"
+            output+=f"{task[0]} - {task[1]} {tick}\n"
+        logger("Viewed Tasks")
+        return output
+        
+    def complete_task(self, task_id):
+        self.cursor.execute(
+            "SELECT COUNT(*) FROM tasks"
+        )
+        num = self.cursor.fetchall()[0][0]
+        if task_id < 1 or task_id > num:
+            print("Invalid Task Number!")
+            return
+        self.cursor.execute(
+            "UPDATE tasks SET completed = 1 WHERE id = ?",
+            (task_id,)
+        )
+        self.conn.commit()
+        logger("Task Completed") 
+        
+    def delete_task(self, task_id):
+        self.cursor.execute(
+            "SELECT COUNT(*) FROM tasks"
+        )
+        num = self.cursor.fetchall()[0][0]
+        if task_id < 1 or task_id > num:
+            print("Invalid Task Number!")
+            return
+        self.cursor.execute(
+            "DELETE FROM tasks WHERE id = ?",
+            (task_id,)
+        )
+        self.conn.commit()
+        logger(f"Deleted Task")
+
+    def get_task_stats(self):
+        self.cursor.execute(
+                "SELECT COUNT(*) FROM tasks",
+                )
+        total = self.cursor.fetchone()[0]
+        self.cursor.execute(
+                "SELECT COUNT(*) FROM tasks WHERE completed = 1",
+                )
+        completed = self.cursor.fetchone()[0]
+        pending = total-completed
+        logger("Viewed Task Stats")
+        output = (
+            f"===== TASK STATS =====\n"
+            f"Total Tasks: {total}\n"
+            f"Completed Tasks: {completed}\n"
+            f"Pending Tasks: {pending}"
+        )
+        return output
+    
+    def history_viewer(self):
+        BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+        LOG_FILE = os.path.join(BASE_DIR, "data", "History.txt")
+        try:
+            with open(LOG_FILE, "r") as f:
+                logger("")
+                return f.read().strip()
+        except FileNotFoundError:
+            return "No history found."
