@@ -48,8 +48,14 @@ while True:
         elif choose == 5:
             try:
                 note_num = int(input("Enter Note Number To Delete : "))
-                db.delete_note(note_num)
-                print("Note Deleted Successfully!!")
+                if db.delete_note(note_num):
+                    print("Note Deleted Successfully!!")
+                else:
+                    print("Note Id Not Found")
+                if db.delete_note(note_num):
+                    print("Note Deleted Successfully!!")
+                else:
+                    print("Note Id Not Found")
             except ValueError:
                 print("Enter Only Numeric Value")
 
@@ -62,15 +68,22 @@ while True:
                 print("Enter Only Numeric Value")
 
         elif choose ==7:
-            task = int(input("Enter Task Number : "))
-            db.complete_task(task)
-            print("Task Marked Completed!")
+            try:
+                task = int(input("Enter Task Number : "))
+                if db.complete_task(task):
+                    print("Task Marked Completed!")
+                else:
+                        print("Task Id Not Found")
+            except ValueError:
+                print("Enter Only Numeric Value")
 
         elif choose == 8:
             try:
                 task_num = int(input("Enter Task Number To Delete : "))
-                db.delete_task(task_num)
-                print("Task Deleted Successfully!!")
+                if db.delete_task(task_num):
+                    print("Task Deleted Successfully!")
+                else:
+                    print("Task ID Not Found!")
             except ValueError:
                 print("Enter Only Numeric Value")
 
@@ -82,12 +95,12 @@ while True:
             print(get_joke())
 
         elif choose == 11:
-            
             print(db.history_viewer())
 
         elif choose == 12:
             print(db.get_task_stats())
         elif choose == 13:
+            db.close()
             print("GoodBye!")
             break
         else:

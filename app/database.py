@@ -57,10 +57,16 @@ class Database:
 
     def get_name(self):
         self.cursor.execute(
-            "SELECT * FROM user"
-        )  
+            "SELECT name FROM user"
+        )
+
+        row = self.cursor.fetchone()
+
         logger("Viewed Name")
-        return self.cursor.fetchone()[1]
+        if row:
+            return row[0]
+
+        return ""
 
     def add_note(self, note):
         self.conn.execute(
@@ -83,20 +89,21 @@ class Database:
 
     def delete_note(self, note_id):
         self.cursor.execute(
-            "SELECT COUNT(*) FROM notes"
+            "DELETE FROM notes WHERE id = ?",
+            (note_id,)
         )
-        num = self.cursor.fetchall()[0][0]
-        if note_id < 1 or note_id > num:
-            print("Invalid Note Number!")
-        else:
-            self.cursor.execute(
-                "DELETE FROM notes WHERE id = (?)",
-                (note_id,))
-            self.conn.commit()
-            logger(f"Deleted Note")
+
+        self.conn.commit()
+
+        logger("Deleted Note")
+
+        if self.cursor.rowcount == 0:
+            return False
+
+        return True
 
     def add_task(self, task):
-        self.conn.execute(
+        self.cursor.execute(
             "INSERT INTO tasks (task) VALUES (?)",
             (task,))
         self.conn.commit()
@@ -120,33 +127,33 @@ class Database:
         
     def complete_task(self, task_id):
         self.cursor.execute(
-            "SELECT COUNT(*) FROM tasks"
-        )
-        num = self.cursor.fetchall()[0][0]
-        if task_id < 1 or task_id > num:
-            print("Invalid Task Number!")
-            return
-        self.cursor.execute(
             "UPDATE tasks SET completed = 1 WHERE id = ?",
             (task_id,)
         )
+
         self.conn.commit()
-        logger("Task Completed") 
+
+        logger("Task Completed")
+
+        if self.cursor.rowcount == 0:
+            return False
+
+        return True
         
     def delete_task(self, task_id):
-        self.cursor.execute(
-            "SELECT COUNT(*) FROM tasks"
-        )
-        num = self.cursor.fetchall()[0][0]
-        if task_id < 1 or task_id > num:
-            print("Invalid Task Number!")
-            return
         self.cursor.execute(
             "DELETE FROM tasks WHERE id = ?",
             (task_id,)
         )
+
         self.conn.commit()
-        logger(f"Deleted Task")
+
+        logger("Deleted Task")
+
+        if self.cursor.rowcount == 0:
+            return False
+
+        return True
 
     def get_task_stats(self):
         self.cursor.execute(
@@ -172,7 +179,9 @@ class Database:
         LOG_FILE = os.path.join(BASE_DIR, "data", "History.txt")
         try:
             with open(LOG_FILE, "r") as f:
-                logger("")
+                logger("Viewed History")
                 return f.read().strip()
         except FileNotFoundError:
             return "No history found."
+    def close(self):
+        self.conn.close()
